@@ -1,0 +1,109 @@
+<div style="max-width:680px;margin:auto;font-family:system-ui,Arial;">
+  <h2>El Paso FRBO Rent Calculator</h2>
+  <p>Enter your property and up to 5 comps. We’ll estimate a rent range.</p>
+
+  <h3>Your Property</h3>
+  <label>Beds <input id="beds" type="number" min="0" step="1"></label>
+  <label>Baths <input id="baths" type="number" min="0" step="0.5"></label>
+  <label>Square Feet <input id="sqft" type="number" min="200" step="10"></label>
+  <label>Condition (1–5) <input id="cond" type="number" min="1" max="5" step="1" value="3"></label>
+  <label>Garage
+    <select id="garage"><option>No</option><option>Yes</option></select>
+  </label>
+
+  <h3>Comps (Rent / Sqft / Beds / Baths / Garage)</h3>
+  <div id="comps"></div>
+
+  <button id="calc">Calculate</button>
+  <div id="out" style="margin-top:16px;padding:12px;border:1px solid #ddd;"></div>
+</div>
+
+<script>
+(function(){
+  const compsDiv = document.getElementById('comps');
+  for(let i=0;i<5;i++){
+    const row=document.createElement('div');
+    row.innerHTML = `
+      <input class="r" type="number" placeholder="Rent" min="300" step="10" style="width:90px;">
+      <input class="s" type="number" placeholder="Sqft" min="200" step="10" style="width:90px;">
+      <input class="b" type="number" placeholder="Beds" min="0" step="1" style="width:70px;">
+      <input class="ba" type="number" placeholder="Baths" min="0" step="0.5" style="width:70px;">
+      <select class="g"><option>No</option><option>Yes</option></select>
+    `;
+    compsDiv.appendChild(row);
+  }
+  function median(arr){
+    const a = arr.filter(x=>isFinite(x)).sort((x,y)=>x-y);
+    if(!a.length) return NaN;
+    const mid = Math.floor(a.length/2);
+    return a.length%2?a[mid]:(a[mid-1]+a[mid])/2;
+  }
+  document.getElementById('calc').onclick = function(){
+    const beds = +document.getElementById('beds').value||0;
+    const baths = +document.getElementById('baths').value||0;
+    const sqft = +document.getElementById('sqft').value||0;
+    const cond = +document.getElementById('cond').value||3;
+    const garage = document.getElementById('garage').value;
+
+    const rows = Array.from(document.querySelectorAll('#comps>div'));
+    const rents = [], sqfts=[], bedsc=[], bathsc=[], garages=[];
+    rows.forEach(r=>{
+      const rr=+r.querySelector('.r').value;
+      const ss=+r.querySelector('.s').value;
+      const bb=+r.querySelector('.b').value;
+      const ba=+r.querySelector('.ba').value;
+      const gg=r.querySelector('.g').value;
+      if(rr>0 && ss>0){ rents.push(rr); sqfts.push(ss); }
+      if(isFinite(bb)) bedsc.push(bb);
+      if(isFinite(ba)) bathsc.push(ba);
+      garages.push(gg);
+    });
+
+    if(!rents.length || !sqft){
+      document.getElementById('out').innerHTML = "Add at least 1 comp and your sqft.";
+      return;
+    }
+
+    const rentPerSqft = rents.map((r,i)=>r/sqfts[i]).filter(x=>isFinite(x));
+    const mRpsf = median(rentPerSqft);
+    const mBeds = median(bedsc) || 0;
+    const mBaths = median(bathsc) || 0;
+
+    const base = Math.round(sqft * mRpsf);
+
+    const garageMajorityYes = garages.filter(g=>g==="Yes").length >= garages.filter(g=>g==="No").length;
+    const garageDelta = (garage==="Yes" ? 1:0) - (garageMajorityYes?1:0);
+
+    const adj = Math.round(
+      base
+      + (beds - mBeds)*75
+      + (baths - mBaths)*50
+      + (cond - 3)*0.03*base
+      + garageDelta*50
+    );
+
+    const band = 0.05; // 5% band
+    const low = Math.round(adj*(1-band)/10)*10;
+    const high= Math.round(adj*(1+band)/10)*10;
+
+    document.getElementById('out').innerHTML =
+      `<b>Suggested Rent Range:</b> $${low.toLocaleString()} – $${high.toLocaleString()}<br>
+       <small>Based on median $/sqft from comps plus modest adjustments for beds/baths/condition/garage.</small>`;
+  };
+})();
+</script>
+<style>
+  body{font-family: system-ui, Arial; margin:0; padding:24px; background:#fafafa;}
+  .wrap{max-width:760px; margin:auto; background:#fff; padding:24px; border:1px solid #eee; border-radius:14px;}
+  h1{margin:0 0 8px 0;}
+  .sub{color:#666; margin:0 0 20px 0;}
+  label{display:block; margin:8px 0;}
+  input, select{padding:8px; border:1px solid #ddd; border-radius:8px;}
+  button{padding:10px 14px; border:1px solid #ddd; border-radius:10px; cursor:pointer;}
+  #out{background:#fcfcfc; border-radius:10px;}
+</style>
+<div class="wrap">
+  <h1>El Paso FRBO Rent Calculator</h1>
+  <p class="sub">Enter your property + comps to get a suggested rent range. For help, text “FRBO” to [your number].</p>
+  <!-- (your existing calculator markup goes here) -->
+</div>
