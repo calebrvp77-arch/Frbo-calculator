@@ -1,109 +1,204 @@
-<div style="max-width:680px;margin:auto;font-family:system-ui,Arial;">
-  <h2>El Paso FRBO Rent Calculator</h2>
-  <p>Enter your property and up to 5 comps. We’ll estimate a rent range.</p>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RealtorDominguez | El Paso FRBO Rent Calculator</title>
+  <meta name="description" content="El Paso FRBO Rent Calculator by Caleb Dominguez, Realtor® with eXp Realty. Get a suggested rent range from your property details and comps.">
+  <style>
+    :root{
+      --brand:#0c62ff; /* adjust to your brand blue */
+      --ink:#111;
+      --muted:#666;
+      --line:#e7e7e7;
+      --bg:#f7f7f8;
+      --card:#ffffff;
+      --radius:14px;
+    }
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+    .wrap{max-width:880px;margin:32px auto;padding:0 16px}
+    .header{display:flex;gap:14px;align-items:center;margin-bottom:16px}
+    .logo{width:42px;height:42px;border-radius:10px;background:var(--brand);display:grid;place-items:center;color:#fff;font-weight:800;letter-spacing:.5px}
+    h1{font-size:1.4rem;line-height:1.15;margin:0}
+    .sub{color:var(--muted);margin:2px 0 16px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    label{font-size:.9rem;color:#222}
+    input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:0.95rem}
+    .section-title{font-weight:700;margin:18px 0 10px}
+    .hint{color:var(--muted);font-size:.9rem}
+    button{appearance:none;border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer}
+    button.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+    #out{margin-top:16px;padding:16px;border:1px dashed var(--line);border-radius:12px;background:#fbfbfd}
+    .result{font-size:1.25rem;font-weight:800}
+    .cta{margin-top:10px;padding:12px;border-radius:12px;background:#eef4ff;border:1px solid #dbe7ff}
+    .cta b{color:var(--brand)}
+    .foot{margin:22px 0;color:var(--muted);font-size:.9rem}
+    .flex{display:flex;gap:8px;align-items:center}
+    .badge{font-size:.8rem;background:#f3f3f4;border:1px solid var(--line);padding:4px 8px;border-radius:999px}
+    .small{font-size:.85rem}
+    @media (max-width:720px){.grid,.grid-3{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <!-- Replace the logo block with an <img src="/path/logo.png" class="logo" alt="RealtorDominguez logo"> if you have one -->
+      <div class="logo">RD</div>
+      <div>
+        <h1>RealtorDominguez | El Paso FRBO Rent Calculator</h1>
+        <div class="sub">Created by Caleb Dominguez, Realtor® with eXp Realty — helping El Paso homeowners rent or sell smarter.</div>
+      </div>
+    </div>
 
-  <h3>Your Property</h3>
-  <label>Beds <input id="beds" type="number" min="0" step="1"></label>
-  <label>Baths <input id="baths" type="number" min="0" step="0.5"></label>
-  <label>Square Feet <input id="sqft" type="number" min="200" step="10"></label>
-  <label>Condition (1–5) <input id="cond" type="number" min="1" max="5" step="1" value="3"></label>
-  <label>Garage
-    <select id="garage"><option>No</option><option>Yes</option></select>
-  </label>
+    <div class="card">
+      <div class="section-title">Your Property</div>
+      <div class="grid">
+        <label>Bedrooms
+          <input id="beds" type="number" min="0" step="1" placeholder="e.g., 3">
+        </label>
+        <label>Bathrooms
+          <input id="baths" type="number" min="0" step="0.5" placeholder="e.g., 2">
+        </label>
+        <label>Square Feet
+          <input id="sqft" type="number" min="200" step="10" placeholder="e.g., 1650">
+        </label>
+        <label>Condition (1–5)
+          <input id="cond" type="number" min="1" max="5" step="1" value="3">
+        </label>
+        <label>Garage
+          <select id="garage"><option>No</option><option>Yes</option></select>
+        </label>
+      </div>
 
-  <h3>Comps (Rent / Sqft / Beds / Baths / Garage)</h3>
-  <div id="comps"></div>
+      <div class="section-title">Comps (up to 5)
+        <span class="hint">Enter Rent, Sqft, Beds, Baths, Garage</span>
+      </div>
+      <div id="comps" class="grid-3"></div>
 
-  <button id="calc">Calculate</button>
-  <div id="out" style="margin-top:16px;padding:12px;border:1px solid #ddd;"></div>
-</div>
+      <div class="flex" style="margin-top:10px">
+        <button id="calc" class="primary">Calculate</button>
+        <button id="reset">Reset</button>
+        <span class="badge small">Tip: 2–5 comps work best</span>
+      </div>
 
-<script>
-(function(){
-  const compsDiv = document.getElementById('comps');
-  for(let i=0;i<5;i++){
-    const row=document.createElement('div');
-    row.innerHTML = `
-      <input class="r" type="number" placeholder="Rent" min="300" step="10" style="width:90px;">
-      <input class="s" type="number" placeholder="Sqft" min="200" step="10" style="width:90px;">
-      <input class="b" type="number" placeholder="Beds" min="0" step="1" style="width:70px;">
-      <input class="ba" type="number" placeholder="Baths" min="0" step="0.5" style="width:70px;">
-      <select class="g"><option>No</option><option>Yes</option></select>
-    `;
-    compsDiv.appendChild(row);
-  }
-  function median(arr){
-    const a = arr.filter(x=>isFinite(x)).sort((x,y)=>x-y);
-    if(!a.length) return NaN;
-    const mid = Math.floor(a.length/2);
-    return a.length%2?a[mid]:(a[mid-1]+a[mid])/2;
-  }
-  document.getElementById('calc').onclick = function(){
-    const beds = +document.getElementById('beds').value||0;
-    const baths = +document.getElementById('baths').value||0;
-    const sqft = +document.getElementById('sqft').value||0;
-    const cond = +document.getElementById('cond').value||3;
-    const garage = document.getElementById('garage').value;
+      <div id="out"></div>
 
-    const rows = Array.from(document.querySelectorAll('#comps>div'));
-    const rents = [], sqfts=[], bedsc=[], bathsc=[], garages=[];
-    rows.forEach(r=>{
-      const rr=+r.querySelector('.r').value;
-      const ss=+r.querySelector('.s').value;
-      const bb=+r.querySelector('.b').value;
-      const ba=+r.querySelector('.ba').value;
-      const gg=r.querySelector('.g').value;
-      if(rr>0 && ss>0){ rents.push(rr); sqfts.push(ss); }
-      if(isFinite(bb)) bedsc.push(bb);
-      if(isFinite(ba)) bathsc.push(ba);
-      garages.push(gg);
-    });
+      <div class="foot">
+        This tool provides an estimate for educational purposes only. For a professional rental/sales consultation, contact Caleb directly.
+      </div>
+    </div>
 
-    if(!rents.length || !sqft){
-      document.getElementById('out').innerHTML = "Add at least 1 comp and your sqft.";
-      return;
+    <div class="foot">
+      © 2025 RealtorDominguez.com | Caleb Dominguez, Realtor® | eXp Realty
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    const compsDiv = document.getElementById('comps');
+    // Build 5 comp rows
+    for(let i=0;i<5;i++){
+      const row=document.createElement('div');
+      row.className = 'card';
+      row.style.padding = '12px';
+      row.style.borderRadius = '12px';
+      row.style.border = '1px solid var(--line)';
+      row.style.background = '#fff';
+      row.innerHTML = `
+        <div class="grid">
+          <label>Rent ($)
+            <input class="r" type="number" placeholder="e.g., 1450" min="300" step="10">
+          </label>
+          <label>Sqft
+            <input class="s" type="number" placeholder="e.g., 1600" min="200" step="10">
+          </label>
+          <label>Beds
+            <input class="b" type="number" placeholder="e.g., 3" min="0" step="1">
+          </label>
+          <label>Baths
+            <input class="ba" type="number" placeholder="e.g., 2" min="0" step="0.5">
+          </label>
+          <label>Garage
+            <select class="g"><option>No</option><option>Yes</option></select>
+          </label>
+        </div>`;
+      compsDiv.appendChild(row);
     }
 
-    const rentPerSqft = rents.map((r,i)=>r/sqfts[i]).filter(x=>isFinite(x));
-    const mRpsf = median(rentPerSqft);
-    const mBeds = median(bedsc) || 0;
-    const mBaths = median(bathsc) || 0;
+    function median(arr){
+      const a = arr.filter(x=>isFinite(x)).sort((x,y)=>x-y);
+      if(!a.length) return NaN;
+      const mid = Math.floor(a.length/2);
+      return a.length%2 ? a[mid] : (a[mid-1]+a[mid])/2;
+    }
 
-    const base = Math.round(sqft * mRpsf);
+    function calc(){
+      const beds = +document.getElementById('beds').value||0;
+      const baths = +document.getElementById('baths').value||0;
+      const sqft = +document.getElementById('sqft').value||0;
+      const cond = +document.getElementById('cond').value||3;
+      const garage = document.getElementById('garage').value;
+      const rows = Array.from(document.querySelectorAll('#comps .card'));
+      const rents = [], sqfts=[], bedsc=[], bathsc=[], garages=[];
+      rows.forEach(r=>{
+        const rr=+r.querySelector('.r').value;
+        const ss=+r.querySelector('.s').value;
+        const bb=+r.querySelector('.b').value;
+        const ba=+r.querySelector('.ba').value;
+        const gg=r.querySelector('.g').value;
+        if(rr>0 && ss>0){ rents.push(rr); sqfts.push(ss); }
+        if(isFinite(bb)) bedsc.push(bb);
+        if(isFinite(ba)) bathsc.push(ba);
+        garages.push(gg);
+      });
 
-    const garageMajorityYes = garages.filter(g=>g==="Yes").length >= garages.filter(g=>g==="No").length;
-    const garageDelta = (garage==="Yes" ? 1:0) - (garageMajorityYes?1:0);
+      const out = document.getElementById('out');
+      if(!rents.length || !sqft){
+        out.innerHTML = "Add at least 1 comp and your square footage.";
+        return;
+      }
 
-    const adj = Math.round(
-      base
-      + (beds - mBeds)*75
-      + (baths - mBaths)*50
-      + (cond - 3)*0.03*base
-      + garageDelta*50
-    );
+      const rpsf = rents.map((r,i)=>r/sqfts[i]).filter(x=>isFinite(x));
+      const mRpsf = median(rpsf);
+      const mBeds = median(bedsc) || 0;
+      const mBaths = median(bathsc) || 0;
+      const base = Math.round(sqft * mRpsf);
+      const yes = garages.filter(g=>g==="Yes").length;
+      const no = garages.length - yes;
+      const garageDelta = (garage==="Yes"?1:0) - (yes>=no?1:0);
 
-    const band = 0.05; // 5% band
-    const low = Math.round(adj*(1-band)/10)*10;
-    const high= Math.round(adj*(1+band)/10)*10;
+      // Adjustments — tweak if your market indicates different weights
+      const adj = Math.round(
+        base
+        + (beds - mBeds)*75
+        + (baths - mBaths)*50
+        + (cond - 3)*0.03*base
+        + garageDelta*50
+      );
 
-    document.getElementById('out').innerHTML =
-      `<b>Suggested Rent Range:</b> $${low.toLocaleString()} – $${high.toLocaleString()}<br>
-       <small>Based on median $/sqft from comps plus modest adjustments for beds/baths/condition/garage.</small>`;
-  };
-})();
-</script>
-<style>
-  body{font-family: system-ui, Arial; margin:0; padding:24px; background:#fafafa;}
-  .wrap{max-width:760px; margin:auto; background:#fff; padding:24px; border:1px solid #eee; border-radius:14px;}
-  h1{margin:0 0 8px 0;}
-  .sub{color:#666; margin:0 0 20px 0;}
-  label{display:block; margin:8px 0;}
-  input, select{padding:8px; border:1px solid #ddd; border-radius:8px;}
-  button{padding:10px 14px; border:1px solid #ddd; border-radius:10px; cursor:pointer;}
-  #out{background:#fcfcfc; border-radius:10px;}
-</style>
-<div class="wrap">
-  <h1>El Paso FRBO Rent Calculator</h1>
-  <p class="sub">Enter your property + comps to get a suggested rent range. For help, text “FRBO” to [your number].</p>
-  <!-- (your existing calculator markup goes here) -->
-</div>
+      const band = 0.05; // 5% range band
+      const low = Math.round(adj*(1-band)/10)*10;
+      const high= Math.round(adj*(1+band)/10)*10;
+
+      out.innerHTML = `
+        <div class="result">Suggested Rent Range: $${low.toLocaleString()} – $${high.toLocaleString()}</div>
+        <div class="hint">Based on median $/sqft from comps plus modest adjustments for beds, baths, condition, and garage.</div>
+        <div class="cta"><b>Want me to review your numbers?</b><br>
+          Text <b>CALCULATOR</b> to <b>915-900-4824</b> and I’ll sanity‑check your comps & send a seller vs. rental breakdown.</div>
+      `;
+    }
+
+    document.getElementById('calc').addEventListener('click', calc);
+    document.getElementById('reset').addEventListener('click',()=>{
+      document.querySelectorAll('input').forEach(el=>el.value='');
+      document.querySelectorAll('select').forEach(el=>el.selectedIndex=0);
+      document.getElementById('cond').value=3;
+      document.getElementById('out').innerHTML='';
+    });
+  })();
+  </script>
+</body>
+</html>
